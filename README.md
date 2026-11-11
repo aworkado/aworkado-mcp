@@ -1,20 +1,20 @@
 # Aworkado MCP server
 
-Search live remote and hybrid jobs from [Aworkado](https://aworkado.co) inside Claude, ChatGPT, Cursor or any other MCP client.
+Ask Claude, ChatGPT, Cursor or any other MCP client for remote and hybrid jobs, and get live postings from [Aworkado](https://aworkado.co).
 
-Aworkado collects job postings straight from the career pages of thousands of employers (Greenhouse, Lever, Ashby, Workable, SmartRecruiters and more) and checks them again every day or two. This server lets an AI assistant search those postings and open any of them in full.
+Aworkado pulls job postings from the career pages of thousands of employers (Greenhouse, Lever, Ashby, Workable, SmartRecruiters and others) and checks each one again every day or two. This server gives your assistant access to them: it can search the postings and read any of them in full.
 
 ```
 https://aworkado.co/mcp
 ```
 
-Streamable HTTP. No account, no API key, read-only. Free.
+It speaks Streamable HTTP and needs no account or API key. It only reads data, and it's free.
 
 ![Aworkado job cards in Claude](docs/claude-widget.png)
 
 ## Connect
 
-**Claude** (claude.ai, desktop, mobile): Customize → Connectors → Add custom connector. Name it Aworkado, paste the URL, choose **No sign-in**.
+**Claude** (web, desktop and mobile): open Customize → Connectors → Add custom connector, name it Aworkado, paste the URL and pick **No sign-in**.
 
 **Claude Code**
 
@@ -24,7 +24,7 @@ claude mcp add --transport http aworkado https://aworkado.co/mcp
 
 **ChatGPT**: turn on developer mode, then create a connector with the URL and no authentication.
 
-**Cursor, VS Code, Goose and other clients**: add a remote HTTP server.
+**Cursor, VS Code, Goose and other clients**: add it as a remote HTTP server, for example:
 
 ```json
 {
@@ -38,7 +38,7 @@ claude mcp add --transport http aworkado https://aworkado.co/mcp
 
 ### `search_jobs`
 
-Finds live remote and hybrid postings. Every filter is optional, and filters combine with AND.
+Searches live remote and hybrid postings. All filters are optional; when you give several, a posting has to match all of them.
 
 | Parameter | What it takes |
 |---|---|
@@ -50,11 +50,11 @@ Finds live remote and hybrid postings. Every filter is optional, and filters com
 | `level` | `Entry`, `Mid-level` or `Senior` |
 | `postedWithin` | `day`, `week` or `month` |
 
-It returns the ten newest matches, the total count and a link to the full list on aworkado.co. In hosts that support [MCP Apps](https://modelcontextprotocol.io/docs/extensions/apps), the results render as job cards; the widget source is in [`widget/job-widget.html`](widget/job-widget.html).
+You get the ten newest matches, the total number of matches and a link to the full list on aworkado.co. Hosts that support [MCP Apps](https://modelcontextprotocol.io/docs/extensions/apps), like Claude, show the results as job cards. The widget's source is in [`widget/job-widget.html`](widget/job-widget.html).
 
 ### `get_job`
 
-Takes a `jobId` from a search result and returns the full posting: description, key points, salary when the employer gives one, the countries it is open to, and the link.
+Opens one posting from the search results by its `jobId`. It returns the description, a short summary, the salary if the employer lists one, the countries the job is open to, and the link.
 
 ## Try asking
 
@@ -71,10 +71,10 @@ Takes a `jobId` from a search result and returns the full posting: description, 
 
 ## Privacy and support
 
-The assistant sends Aworkado only the search filters it chose, never your conversation or account. See the [privacy policy](https://aworkado.co/privacy) and [terms](https://aworkado.co/terms). Docs: [aworkado.co/ai-assistants](https://aworkado.co/ai-assistants).
+Your assistant sends Aworkado the search filters it chose and nothing else. We never see your conversation or your account. Details are in the [privacy policy](https://aworkado.co/privacy) and the [terms](https://aworkado.co/terms), and there's a user guide at [aworkado.co/ai-assistants](https://aworkado.co/ai-assistants).
 
-Questions or bugs: open an issue or write to hello@aworkado.co.
+Found a bug or have a question? Open an issue or write to hello@aworkado.co.
 
 ## License
 
-The widget and the files in this repository are MIT licensed. The server itself runs on aworkado.co and is not part of this repository.
+Everything in this repository, including the widget, is MIT licensed. The server itself runs on aworkado.co, and its code isn't published here.

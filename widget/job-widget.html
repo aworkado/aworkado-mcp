@@ -5,65 +5,185 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Aworkado jobs</title>
 <style>
-  /* Host variables first (MCP Apps hostContext.styles), the website's palette as fallback. */
+  /* Palette from design/aworkado.pen, "MCP widget · final": warm neutrals that sit on
+     Claude's surfaces, one blue for the way out to aworkado.co. */
   :root {
     color-scheme: light dark;
-    --aw-bg: var(--color-background-primary, light-dark(#ffffff, #0a0a0b));
-    --aw-card: var(--color-background-secondary, light-dark(#f7f7f8, #18181b));
-    --aw-text: var(--color-text-primary, light-dark(#09090b, #fafafa));
-    --aw-muted: var(--color-text-secondary, light-dark(#5f5f6b, #a1a1aa));
-    --aw-border: var(--color-border-primary, light-dark(#e4e4e7, #27272a));
-    --aw-accent: light-dark(#0080ff, #4da6ff);
-    --aw-radius: var(--border-radius-lg, 12px);
-    --aw-font: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+    --text: light-dark(#141413, #faf9f5);
+    --text-2: light-dark(#3d3d3a, #c2c0b6);
+    --muted: light-dark(#6b6a63, #9c9a92);
+    --border: light-dark(#e8e6dc, #3e3d3a);
+    --soft: light-dark(#f5f4ed, #30302e);
+    --raised: light-dark(#ffffff, #262624);
+    --accent: #0066d6;
+    --accent-hover: #0057b8;
+    --font: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, Roboto, sans-serif);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: transparent; }
-  body { font: 14px/1.4 var(--aw-font); color: var(--aw-text); }
-  #app { padding: 4px 2px; max-width: 100%; }
-  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 2px 8px; }
-  .head h2 { font-size: 13px; font-weight: 600; margin: 0; color: var(--aw-muted); }
-  .list { display: flex; flex-direction: column; gap: 8px; }
-  .card {
-    display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: start;
-    padding: 12px; border: 1px solid var(--aw-border); border-radius: var(--aw-radius);
-    background: var(--aw-card); color: inherit; text-decoration: none; cursor: pointer;
-    transition: border-color .12s ease;
+  body { font: 14px/1.4 var(--font); color: var(--text); -webkit-font-smoothing: antialiased; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: inherit; }
+  a { color: inherit; }
+  svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  #app { padding: 8px 4px; }
+
+  /* Header */
+  .head { display: flex; align-items: center; gap: 12px; padding: 4px 4px 10px; }
+  .heading { flex: 1; min-width: 0; }
+  .title { margin: 0; font-size: 16px; font-weight: 600; }
+  .count { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+  .icon-btn {
+    flex: none; width: 32px; height: 32px; display: grid; place-items: center;
+    border: 1px solid var(--border); border-radius: 8px; color: var(--text-2);
   }
-  .card:hover, .card:focus-visible { border-color: var(--aw-accent); outline: none; }
+  .icon-btn:hover { background: var(--soft); }
+
+  /* Inline table */
+  .cols, .sum { display: grid; grid-template-columns: 32px minmax(0, 1fr) 84px 76px 84px 16px; gap: 12px; align-items: center; }
+  .cols { padding: 6px 4px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 500; color: var(--muted); }
+  .cols span:nth-child(5), .posted { text-align: right; }
+  .row { border-bottom: 1px solid var(--border); padding: 10px 4px; }
+  .row.open { background: var(--soft); border-radius: 10px; border-bottom-color: transparent; padding: 12px; margin: 2px 0; }
+  .sum { width: 100%; }
+  .sum .chev { color: var(--muted); }
+  .cell { font-size: 13px; color: var(--muted); }
+  .cell.where { color: var(--text-2); }
+  .fresh { color: var(--text); font-weight: 600; }
+  .job-title { margin: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+  .company { margin: 1px 0 0; font-size: 13px; color: var(--muted); }
+  .pay { color: var(--text); font-weight: 600; }
+  .meta { display: none; margin: 1px 0 0; font-size: 12.5px; color: var(--muted); }
+
   .logo {
-    width: 40px; height: 40px; border-radius: 8px; background: var(--aw-bg);
-    border: 1px solid var(--aw-border); display: grid; place-items: center; overflow: hidden;
-    font-weight: 600; color: var(--aw-muted);
+    width: 32px; height: 32px; border-radius: 8px; background: #fff; border: 1px solid var(--border);
+    display: grid; place-items: center; overflow: hidden; flex: none;
+    font-weight: 600; font-size: 13px; color: #6b6a63;
   }
   .logo img { width: 100%; height: 100%; object-fit: contain; }
-  .body { min-width: 0; }
-  .title { font-weight: 600; font-size: 15px; margin: 0 0 2px; overflow-wrap: anywhere; }
-  .company { color: var(--aw-muted); margin: 0 0 6px; }
-  .meta { display: flex; flex-wrap: wrap; gap: 4px 6px; }
-  .chip {
-    font-size: 12px; padding: 2px 8px; border-radius: 999px;
-    border: 1px solid var(--aw-border); color: var(--aw-muted); white-space: nowrap;
-    max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+  .logo.l { width: 52px; height: 52px; border-radius: 12px; font-size: 20px; }
+
+  .detail { padding: 12px 0 0 44px; }
+  .label { margin: 0 0 10px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .points { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .points li { position: relative; padding-left: 12px; font-size: 13.5px; color: var(--text-2); }
+  .points li::before { content: ""; position: absolute; left: 0; top: .6em; width: 4px; height: 4px; border-radius: 50%; background: var(--muted); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 14px; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 36px; padding: 0 16px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    text-decoration: none; white-space: nowrap;
   }
-  .chip.pay { color: var(--aw-text); }
-  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
-  .more {
-    display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
-    border-radius: var(--aw-radius); background: var(--aw-accent); color: #fff;
-    font-weight: 600; text-decoration: none;
+  .btn.primary { background: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.ghost { border: 1px solid var(--border); color: var(--text); }
+  .btn.ghost:hover { background: var(--soft); }
+  .btn.tall { height: 40px; }
+
+  .foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 4px 6px; }
+  .source { font-size: 12.5px; color: var(--muted); }
+
+  /* Empty and error */
+  .panel { padding: 24px 12px 20px; }
+  .panel svg.i { width: 22px; height: 22px; color: var(--muted); }
+  .panel h2 { margin: 8px 0 0; font-size: 15px; font-weight: 600; }
+  .panel p { margin: 8px 0 0; font-size: 13.5px; color: var(--muted); }
+
+  /* Skeleton */
+  .bar { display: block; height: 12px; border-radius: 4px; background: var(--border); animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .55; } }
+  @media (prefers-reduced-motion: reduce) { .bar { animation: none; } }
+
+  /* Narrow inline: one column, meta line instead of table cells */
+  @media (max-width: 559px) {
+    .cols { display: none; }
+    .sum { grid-template-columns: 32px minmax(0, 1fr) 16px; align-items: start; }
+    .sum .cell { display: none; }
+    .row { padding: 11px 4px; }
+    .company { color: var(--text-2); }
+    .meta { display: block; }
+    .detail { padding-left: 0; }
+    .actions .btn { flex: 1 1 100%; height: 44px; }
+    .icon-btn { width: 44px; height: 44px; }
+    .foot { flex-direction: column; align-items: stretch; }
+    .foot .btn { height: 44px; }
   }
-  .brand { font-size: 12px; color: var(--aw-muted); }
-  .empty { padding: 16px; text-align: center; color: var(--aw-muted); }
+
+  /* Fullscreen */
+  .fs { display: flex; flex-direction: column; gap: 14px; height: 100vh; padding: 12px 16px 16px; }
+  .fs .bar-top { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .fs .bar-top .heading { flex: 0 1 auto; }
+  .filters { flex: 1; display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .seg { display: flex; gap: 2px; padding: 3px; background: var(--soft); border-radius: 9px; }
+  .seg button { padding: 6px 12px; border-radius: 7px; border: 1px solid transparent; font-size: 13px; font-weight: 500; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--raised); border-color: var(--border); color: var(--text); font-weight: 600; }
+  .chips { display: flex; gap: 6px; }
+  .chip { padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--text-2); white-space: nowrap; }
+  .chip[aria-pressed="true"] { background: var(--text); border-color: var(--text); color: var(--raised); }
+  .fs-body { flex: 1; min-height: 0; display: flex; gap: 24px; }
+  /* Claude draws its message box over the bottom of a fullscreen app: keep the last rows
+     and buttons scrollable above it. */
+  .fs-list, .fs-detail { padding-bottom: calc(var(--safe-bottom, 0px) + 120px); }
+  .fs-list { width: 340px; flex: none; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; width: 100%; }
+  .item:hover { background: var(--soft); }
+  .item[aria-current="true"] { background: var(--soft); }
+  .item .body { flex: 1; min-width: 0; }
+  .item .job-title { font-size: 13.5px; }
+  .item .sub { margin: 1px 0 0; font-size: 12.5px; color: var(--muted); }
+  .item .posted { font-size: 12.5px; color: var(--muted); }
+  .item .posted.fresh { color: var(--text); }
+  .item .chev { color: var(--muted); }
+  .load-more { flex: none; height: 40px; margin-top: 8px; border: 1px solid var(--border); border-radius: 10px; font-size: 13.5px; font-weight: 500; text-align: center; }
+  .load-more:hover { background: var(--soft); }
+  .fs-detail { flex: 1; min-width: 0; overflow-y: auto; padding-top: 4px; }
+  .d-head { display: flex; align-items: center; gap: 14px; }
+  .d-head h2 { margin: 0; font-size: 22px; font-weight: 700; overflow-wrap: anywhere; }
+  .d-head p { margin: 3px 0 0; font-size: 14px; color: var(--muted); }
+  .facts { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 20px 0; padding: 14px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .facts dt { font-size: 12px; font-weight: 500; color: var(--muted); }
+  .facts dd { margin: 2px 0 0; font-size: 14px; font-weight: 600; }
+  .fs-detail .points li { font-size: 14.5px; }
+  .fs-detail .actions { padding-top: 20px; }
+  .note { margin: 20px 0 0; font-size: 12.5px; color: var(--muted); }
+  .back { display: inline-flex; align-items: center; gap: 4px; height: 44px; color: var(--accent); font-weight: 600; }
+  .status { padding: 16px 10px; font-size: 13px; color: var(--muted); }
+
+  /* Narrow fullscreen: list, then one posting at a time */
+  .fs.narrow { height: auto; min-height: 100vh; gap: 12px; padding: 16px 16px calc(var(--safe-bottom, 0px) + 120px); }
+  .fs.narrow .fs-list, .fs.narrow .fs-detail { padding-bottom: 0; }
+  .fs.narrow .bar-top { flex-direction: column; align-items: stretch; gap: 12px; }
+  .fs.narrow .filters { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .fs.narrow .chip { padding: 13px 14px; }
+  .fs.narrow .fs-body { display: block; }
+  .fs.narrow .fs-list { width: auto; overflow: visible; gap: 0; }
+  .fs.narrow .item { gap: 12px; padding: 8px 0; border-radius: 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .fs.narrow .item:hover, .fs.narrow .item[aria-current="true"] { background: none; }
+  .fs.narrow .item .logo { width: 36px; height: 36px; }
+  .fs.narrow .item .job-title { font-size: 14px; }
+  .fs.narrow .item .company { color: var(--text-2); }
+  .fs.narrow .load-more { height: 44px; margin-top: 12px; }
+  .fs.narrow .logo.l { width: 44px; height: 44px; border-radius: 10px; }
+  .fs.narrow .d-head { gap: 12px; }
+  .fs.narrow .d-head h2 { font-size: 19px; }
+  .fs.narrow .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin: 12px 0; padding: 12px 0; }
+  .fs.narrow .actions { flex-direction: column; }
+  .fs.narrow .actions .btn { flex: none; height: 44px; }
 </style>
 </head>
 <body>
-<div id="app"><div class="empty">Searching jobs…</div></div>
+<div id="app"></div>
 <script>
 (() => {
   "use strict";
 
-  // MCP Apps bridge (spec 2026-01-26): JSON-RPC 2.0 over postMessage with the host.
+  const INLINE_ROWS = 8;
+  const FULLSCREEN_STEP = 20;
+  const SITE = "https://aworkado.co/?utm_source=mcp&utm_medium=mcp-app&utm_campaign=aworkado-app";
+
+  // ---- MCP Apps bridge (spec 2026-01-26): JSON-RPC 2.0 over postMessage with the host.
   let nextId = 1;
   const pending = new Map();
   const send = (message) => window.parent.postMessage({ jsonrpc: "2.0", ...message }, "*");
@@ -74,20 +194,51 @@
   });
   const notify = (method, params) => send({ method, params });
 
+  // ---- State
+  const state = {
+    phase: "loading",          // loading | results | error
+    result: null,              // search_jobs structured content
+    hostName: "",
+    displayMode: "inline",
+    displayModes: [],
+    openId: null,              // the inline row that is expanded
+    fs: null,                  // fullscreen state, made on entry
+  };
+
   const app = document.getElementById("app");
 
+  // ---- DOM helpers
   function el(tag, attrs, children) {
     const node = document.createElement(tag);
     for (const [key, value] of Object.entries(attrs || {})) {
-      if (value === undefined || value === null) continue;
+      if (value === undefined || value === null || value === false) continue;
       if (key === "class") node.className = value;
       else if (key === "text") node.textContent = value;
-      else node.setAttribute(key, value);
+      else if (key.startsWith("on")) node.addEventListener(key.slice(2), value);
+      else node.setAttribute(key, value === true ? "" : value);
     }
-    for (const child of children || []) if (child) node.appendChild(child);
+    for (const child of [].concat(children || [])) if (child) node.appendChild(child);
     return node;
   }
 
+  const ICONS = {
+    expand: '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" x2="14" y1="3" y2="10"/><line x1="3" x2="10" y1="21" y2="14"/>',
+    down: '<path d="m6 9 6 6 6-6"/>',
+    up: '<path d="m18 15-6-6-6 6"/>',
+    right: '<path d="m9 18 6-6-6-6"/>',
+    left: '<path d="m15 18-6-6 6-6"/>',
+    out: '<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',
+    chat: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    none: '<path d="m13.5 8.5-5 5"/><path d="m8.5 8.5 5 5"/><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+    alert: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
+  };
+  function icon(name, cls) {
+    const span = document.createElement("span");
+    span.innerHTML = `<svg class="i ${cls || ""}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name]}</svg>`;
+    return span.firstChild;
+  }
+
+  // ---- Host actions
   // Links go through the host (ui/open-link) so they open in the user's browser; a host
   // without it falls back to a new window.
   async function openLink(url) {
@@ -99,77 +250,406 @@
     }
   }
 
-  function linkTo(node, url) {
-    node.setAttribute("href", url);
-    node.setAttribute("target", "_blank");
-    node.setAttribute("rel", "noopener");
-    node.addEventListener("click", (event) => { event.preventDefault(); openLink(url); });
-    return node;
+  function link(cls, url, label, iconName) {
+    return el("a", {
+      class: cls, href: url, target: "_blank", rel: "noopener",
+      onclick: (event) => { event.preventDefault(); openLink(url); },
+    }, [document.createTextNode(label), iconName && icon(iconName)]);
   }
 
-  function logo(job) {
-    const box = el("div", { class: "logo", text: job.logoUrl ? "" : (job.company || "?").charAt(0).toUpperCase() });
+  function assistantName() {
+    const name = state.hostName.toLowerCase();
+    if (name.includes("claude")) return "Claude";
+    if (name.includes("chatgpt") || name.includes("openai")) return "ChatGPT";
+    return null;
+  }
+
+  async function askAbout(job) {
+    const text = `Tell me more about the ${job.title} role at ${job.company} (Aworkado job ${job.id}).`;
+    try {
+      await request("ui/message", { role: "user", content: [{ type: "text", text }] });
+      if (state.displayMode === "fullscreen") setDisplayMode("inline");
+    } catch {
+      openLink(job.url);
+    }
+  }
+
+  async function setDisplayMode(mode) {
+    try {
+      const result = await request("ui/request-display-mode", { mode });
+      if (result && result.mode) changeDisplayMode(result.mode);
+    } catch {
+      // The host keeps its mode; nothing to undo.
+    }
+  }
+
+  function jobButtons(job, tall) {
+    const ask = assistantName();
+    return el("div", { class: "actions" }, [
+      link("btn primary" + (tall ? " tall" : ""), job.url, "Open on Aworkado", "out"),
+      el("button", { class: "btn ghost" + (tall ? " tall" : ""), type: "button", onclick: () => askAbout(job) }, [
+        document.createTextNode(ask ? `Ask ${ask} about this role` : "Ask about this role"),
+        icon("chat"),
+      ]),
+    ]);
+  }
+
+  // ---- Text
+  const REGIONS = {
+    europe: "Europe", "latin-america": "Latin America", asia: "Asia", africa: "Africa",
+    "middle-east": "the Middle East", "north-america": "North America", oceania: "Oceania",
+  };
+  let regionNames = null;
+  try { regionNames = new Intl.DisplayNames(["en"], { type: "region" }); } catch { /* codes then */ }
+
+  // "Customer Support" -> "customer support"; acronyms and words like DevOps keep their case.
+  const lowerWords = (text) => text.split(" ").map((w) => (/[A-Z].*[A-Z]/.test(w) ? w : w.toLowerCase())).join(" ");
+  const capitalise = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+
+  function searchTitle(filters) {
+    const f = filters || {};
+    const kind = f.workplace === "hybrid" ? "hybrid" : f.workplace === "remote" ? "remote" : "";
+    const what = f.jobFunction ? lowerWords(f.jobFunction) : f.query || "";
+    let title = capitalise([kind, what, "jobs"].filter(Boolean).join(" "));
+    if (!kind && !what) title = "Remote and hybrid jobs";
+    const countries = (f.countries || []).map((c) => (regionNames && regionNames.of(c)) || c);
+    if (countries.length) {
+      title += " in " + (countries.length > 2 ? `${countries.slice(0, 2).join(", ")} +${countries.length - 2}` : countries.join(" or "));
+    } else if (f.region === "anywhere") {
+      title += " open worldwide";
+    } else if (REGIONS[f.region]) {
+      title += " in " + REGIONS[f.region];
+    }
+    return title;
+  }
+
+  const number = (n) => n.toLocaleString("en-US");
+  const roles = (n) => `${number(n)} open role${n === 1 ? "" : "s"}`;
+
+  function daysAgo(isoDate) {
+    const days = Math.floor((Date.now() - Date.parse(isoDate + "T00:00:00Z")) / 86400000);
+    return days >= 0 ? days : null;
+  }
+  function posted(isoDate) {
+    const days = daysAgo(isoDate);
+    if (days === null) return "";
+    if (days === 0) return "Today";
+    if (days === 1) return "Yesterday";
+    if (days < 30) return days + "d ago";
+    return new Date(isoDate + "T00:00:00Z").toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
+  }
+  const isFresh = (isoDate) => { const d = daysAgo(isoDate); return d !== null && d <= 2; };
+  const where = (job) => (job.workplace || []).join(" / ") || "—";
+  const dot = (...parts) => parts.filter(Boolean).join(" · ");
+
+  function logo(job, large) {
+    const letter = (job.company || "?").charAt(0).toUpperCase();
+    const box = el("div", { class: "logo" + (large ? " l" : ""), text: job.logoUrl ? "" : letter });
     if (job.logoUrl) {
       const img = el("img", { src: job.logoUrl, alt: "", loading: "lazy" });
-      img.addEventListener("error", () => { box.textContent = (job.company || "?").charAt(0).toUpperCase(); });
+      img.addEventListener("error", () => { box.textContent = letter; });
       box.appendChild(img);
     }
     return box;
   }
 
-  function ago(isoDate) {
-    const days = Math.floor((Date.now() - Date.parse(isoDate + "T00:00:00Z")) / 86400000);
-    if (!(days >= 0)) return null;
-    if (days === 0) return "Today";
-    if (days === 1) return "Yesterday";
-    if (days < 30) return days + " days ago";
-    return new Date(isoDate).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  function keyPoints(job) {
+    if (!job.keyPoints || !job.keyPoints.length) return null;
+    return el("div", {}, [
+      el("p", { class: "label", text: "Key points" }),
+      el("ul", { class: "points" }, job.keyPoints.map((p) => el("li", { text: p }))),
+    ]);
   }
 
-  function card(job) {
-    const chips = [
-      job.salary && el("span", { class: "chip pay", text: job.salary }),
-      el("span", { class: "chip", text: job.location }),
-      ...(job.workplace || []).map((w) => el("span", { class: "chip", text: w })),
-      job.level && el("span", { class: "chip", text: job.level }),
-      ago(job.datePosted) && el("span", { class: "chip", text: ago(job.datePosted) }),
-    ];
-    return linkTo(el("a", { class: "card" }, [
-      logo(job),
-      el("div", { class: "body" }, [
-        el("p", { class: "title", text: job.title }),
-        el("p", { class: "company", text: job.company }),
-        el("div", { class: "meta" }, chips),
+  // ---- Inline
+  function header(titleText, countText) {
+    const canExpand = state.displayModes.includes("fullscreen") && state.phase === "results";
+    return el("div", { class: "head" }, [
+      el("div", { class: "heading" }, [
+        el("h1", { class: "title", text: titleText }),
+        countText && el("p", { class: "count", text: countText }),
       ]),
-    ]), job.url);
+      canExpand && el("button", {
+        class: "icon-btn", type: "button", title: "Open full screen", "aria-label": "Open full screen",
+        onclick: () => setDisplayMode("fullscreen"),
+      }, icon("expand")),
+    ]);
   }
 
-  function render(result) {
-    app.textContent = "";
-    const jobs = (result && result.jobs) || [];
-    if (jobs.length === 0) {
-      app.appendChild(el("div", { class: "empty", text: "No live postings match this search." }));
-      return;
-    }
+  function row(job) {
+    const open = state.openId === job.id;
+    const fresh = isFresh(job.datePosted);
+    const companyLine = el("p", { class: "company" }, [
+      document.createTextNode(job.company),
+      job.salaryShort && document.createTextNode(" · "),
+      job.salaryShort && el("span", { class: "pay", text: job.salaryShort }),
+    ]);
+    const summary = el("button", {
+      class: "sum", type: "button", "aria-expanded": open ? "true" : "false",
+      onclick: () => { state.openId = open ? null : job.id; render(); },
+    }, [
+      logo(job),
+      el("div", {}, [
+        el("p", { class: "job-title", text: job.title }),
+        companyLine,
+        el("p", { class: "meta", text: dot(where(job), job.level, posted(job.datePosted)) }),
+      ]),
+      el("span", { class: "cell where", text: where(job) }),
+      el("span", { class: "cell", text: job.level || "—" }),
+      el("span", { class: "cell posted" + (fresh ? " fresh" : ""), text: posted(job.datePosted) }),
+      icon(open ? "up" : "down", "chev"),
+    ]);
+    return el("div", { class: "row" + (open ? " open" : "") }, [
+      summary,
+      open && el("div", { class: "detail" }, [keyPoints(job), jobButtons(job, false)]),
+    ]);
+  }
+
+  function renderInline() {
+    const result = state.result;
+    const jobs = (result.jobs || []).slice(0, INLINE_ROWS);
     const total = result.totalCount || jobs.length;
-    app.appendChild(el("div", { class: "head" }, [
-      el("h2", { text: total > jobs.length ? `${jobs.length} newest of ${total} jobs` : `${total} jobs` }),
-    ]));
-    app.appendChild(el("div", { class: "list" }, jobs.map(card)));
-    app.appendChild(el("div", { class: "foot" }, [
-      el("span", { class: "brand", text: "Aworkado · remote jobs from company career pages" }),
-      result.moreUrl && linkTo(el("a", { class: "more", text: total > jobs.length ? "See all on Aworkado" : "Open Aworkado" }), result.moreUrl),
-    ]));
+    const count = total > jobs.length
+      ? `Showing ${jobs.length} of ${roles(total)} · newest first`
+      : `${roles(total)} · newest first`;
+    return [
+      header(searchTitle(result.filters), count),
+      el("div", { class: "cols", "aria-hidden": "true" }, [
+        el("span"), el("span", { text: "Role" }), el("span", { text: "Where" }),
+        el("span", { text: "Level" }), el("span", { text: "Posted" }), el("span"),
+      ]),
+      el("div", {}, jobs.map(row)),
+      el("div", { class: "foot" }, [
+        el("span", { class: "source", text: "Live postings from company career pages" }),
+        link("btn primary tall", result.moreUrl || SITE, total > jobs.length ? `See all ${number(total)} on Aworkado` : "Open on Aworkado", "out"),
+      ]),
+    ];
+  }
+
+  function renderLoading() {
+    const bar = (w, h) => el("span", { class: "bar", style: `width:${w}px;height:${h}px` });
+    const rows = [260, 246, 232, 218, 204, 190].map((w) => el("div", { class: "row" }, el("div", { class: "sum" }, [
+      el("span", { class: "bar", style: "width:32px;height:32px;border-radius:8px" }),
+      el("div", { style: "display:grid;gap:7px" }, [bar(w, 14), bar(130, 11)]),
+      el("span", { class: "cell" }, bar(70, 12)), el("span", { class: "cell" }, bar(60, 12)),
+      el("span", { class: "cell", style: "display:flex;justify-content:flex-end" }, bar(70, 12)), el("span"),
+    ])));
+    return [
+      el("div", { style: "display:grid;gap:8px;padding:8px 4px 14px", "aria-label": "Searching jobs" }, [bar(220, 16), bar(150, 12)]),
+      ...rows,
+    ];
+  }
+
+  function renderPanel(iconName, title, text, url) {
+    return [el("div", { class: "panel" }, [
+      icon(iconName),
+      el("h2", { text: title }),
+      el("p", { text }),
+      el("div", { class: "actions" }, link("btn ghost tall", url, "Open Aworkado", "out")),
+    ])];
+  }
+
+  // ---- Fullscreen
+  function startFullscreen() {
+    const f = (state.result && state.result.filters) || {};
+    state.fs = {
+      where: f.workplace || "all",
+      levels: new Set((f.level || "").split(",").filter(Boolean)),
+      sort: "newest",
+      jobs: (state.result && state.result.jobs) || [],
+      total: (state.result && state.result.totalCount) || 0,
+      page: 0,
+      shown: FULLSCREEN_STEP,
+      busy: false,
+      local: false,           // the host would not run browse_jobs: filter what we have
+      selectedId: null,
+      view: "list",
+    };
+    fetchPage(1);
+  }
+
+  async function fetchPage(page) {
+    const fs = state.fs;
+    const f = state.result.filters || {};
+    fs.busy = true;
+    render();
+    try {
+      const args = {
+        query: f.query || undefined,
+        jobFunction: f.jobFunction || undefined,
+        countries: f.countries && f.countries.length ? f.countries : undefined,
+        region: f.region || undefined,
+        postedWithin: f.postedWithin || undefined,
+        workplace: fs.where === "all" ? undefined : fs.where,
+        level: fs.levels.size ? [...fs.levels].join(",") : undefined,
+        sort: fs.sort,
+        page,
+      };
+      const result = await request("tools/call", { name: "browse_jobs", arguments: args });
+      const data = result && result.structuredContent;
+      if (!data || result.isError) throw new Error("browse_jobs failed");
+      if (fs !== state.fs) return;
+      fs.jobs = page === 1 ? data.jobs : fs.jobs.concat(data.jobs);
+      fs.total = data.totalCount;
+      fs.page = page;
+    } catch {
+      if (fs !== state.fs) return;
+      fs.local = true;
+    }
+    fs.busy = false;
+    render();
+  }
+
+  function visibleJobs() {
+    const fs = state.fs;
+    if (!fs.local) return fs.jobs;
+    let jobs = (state.result.jobs || []).filter((job) =>
+      (fs.where === "all" || (job.workplace || []).some((w) => w.toLowerCase() === fs.where)) &&
+      (!fs.levels.size || fs.levels.has(job.level)));
+    if (fs.sort === "salary") jobs = jobs.slice().sort((a, b) => (b.salaryShort ? 1 : 0) - (a.salaryShort ? 1 : 0));
+    return jobs;
+  }
+
+  function refilter(change) {
+    const fs = state.fs;
+    change(fs);
+    fs.shown = FULLSCREEN_STEP;
+    fs.selectedId = null;
+    fs.view = "list";
+    if (fs.local) render(); else fetchPage(1);
+  }
+
+  function filterBar(narrow) {
+    const fs = state.fs;
+    const seg = (options, current, onPick) => el("div", { class: "seg", role: "group" }, options.map(([value, label]) =>
+      el("button", { type: "button", "aria-pressed": current === value ? "true" : "false", onclick: () => onPick(value), text: label })));
+    const chip = (label, pressed, onClick) => el("button", { class: "chip", type: "button", "aria-pressed": pressed ? "true" : "false", onclick: onClick, text: label });
+    const toggleLevel = (level) => refilter((s) => { s.levels.has(level) ? s.levels.delete(level) : s.levels.add(level); });
+    const levels = ["Entry", "Mid-level", "Senior"].map((level) => chip(level, fs.levels.has(level), () => toggleLevel(level)));
+
+    if (narrow) {
+      const whereChip = (value, label) => chip(label, fs.where === value, () => refilter((s) => { s.where = s.where === value ? "all" : value; }));
+      return el("div", { class: "filters" }, [whereChip("remote", "Remote"), whereChip("hybrid", "Hybrid"), ...levels]);
+    }
+    return el("div", { class: "filters" }, [
+      seg([["all", "All"], ["remote", "Remote"], ["hybrid", "Hybrid"]], fs.where, (v) => refilter((s) => { s.where = v; })),
+      el("div", { class: "chips" }, levels),
+      seg([["newest", "Newest"], ["salary", "Salary"]], fs.sort, (v) => refilter((s) => { s.sort = v; })),
+    ]);
+  }
+
+  function listItem(job, narrow, selected) {
+    const fresh = isFresh(job.datePosted);
+    const body = narrow
+      ? [
+          el("p", { class: "job-title", text: job.title }),
+          el("p", { class: "company", text: job.company }),
+          el("p", { class: "sub", text: dot(job.salaryShort, where(job), job.level, posted(job.datePosted)) }),
+        ]
+      : [
+          el("p", { class: "job-title", text: job.title }),
+          el("p", { class: "sub", text: dot(job.company, where(job)) }),
+        ];
+    return el("button", {
+      class: "item", type: "button", "aria-current": selected ? "true" : "false",
+      onclick: () => { state.fs.selectedId = job.id; state.fs.view = "detail"; render(); if (narrow) window.scrollTo(0, 0); },
+    }, [
+      logo(job),
+      el("div", { class: "body" }, body),
+      narrow ? icon("right", "chev") : el("span", { class: "posted" + (fresh ? " fresh" : ""), text: posted(job.datePosted) }),
+    ]);
+  }
+
+  function detailView(job, narrow) {
+    const facts = [["Level", job.level || "Not stated"], ["Where", where(job)], ["Salary", job.salaryShort || "Not listed"], ["Posted", posted(job.datePosted)]];
+    return el("div", { class: "fs-detail" }, [
+      narrow && el("button", { class: "back", type: "button", onclick: () => { state.fs.view = "list"; render(); } }, [icon("left"), document.createTextNode("Results")]),
+      el("div", { class: "d-head" }, [
+        logo(job, true),
+        el("div", {}, [el("h2", { text: job.title }), el("p", { text: dot(job.company, where(job), job.location) })]),
+      ]),
+      el("dl", { class: "facts" }, facts.map(([k, v]) => el("div", {}, [el("dt", { text: k }), el("dd", { text: v })]))),
+      keyPoints(job),
+      jobButtons(job, true),
+      el("p", { class: "note", text: "Applications happen on the company's own career page." }),
+    ]);
+  }
+
+  function renderFullscreen() {
+    const fs = state.fs;
+    const narrow = window.innerWidth < 720;
+    const jobs = visibleJobs();
+    const shown = jobs.slice(0, fs.shown);
+    const total = fs.local ? jobs.length : fs.total;
+    const selected = jobs.find((j) => j.id === fs.selectedId) || (!narrow && jobs[0]) || null;
+
+    const canShowMore = jobs.length > fs.shown || (!fs.local && jobs.length < total);
+    const more = canShowMore && el("button", {
+      class: "load-more", type: "button", disabled: fs.busy,
+      text: fs.busy ? "Loading…" : `Show ${Math.min(FULLSCREEN_STEP, total - shown.length)} more`,
+      onclick: () => {
+        fs.shown += FULLSCREEN_STEP;
+        if (!fs.local && fs.shown > fs.jobs.length && fs.jobs.length < fs.total) fetchPage(fs.page + 1); else render();
+      },
+    });
+
+    const list = el("div", { class: "fs-list" }, [
+      ...shown.map((job) => listItem(job, narrow, selected && job.id === selected.id)),
+      !shown.length && el("p", { class: "status", text: fs.busy ? "Loading…" : "No open roles match these filters." }),
+      more,
+    ]);
+
+    const top = el("div", { class: "bar-top" }, [
+      el("div", { class: "heading" }, [
+        el("h1", { class: "title", text: searchTitle(state.result.filters) }),
+        el("p", { class: "count", text: `${roles(total)} · ${fs.sort === "salary" ? "highest salary first" : "newest first"}` }),
+      ]),
+      filterBar(narrow),
+    ]);
+
+    if (narrow && fs.view === "detail" && selected) {
+      return [el("div", { class: "fs narrow" }, detailView(selected, true))];
+    }
+    return [el("div", { class: "fs" + (narrow ? " narrow" : "") }, [
+      top,
+      el("div", { class: "fs-body" }, [list, !narrow && selected && detailView(selected, false)]),
+    ])];
+  }
+
+  // ---- Render
+  function render() {
+    let nodes;
+    if (state.phase === "loading") nodes = renderLoading();
+    else if (state.phase === "error") nodes = renderPanel("alert", "The search did not run", "Ask again with different filters, or open the search on Aworkado.", SITE);
+    else if (!(state.result.jobs || []).length) nodes = renderPanel("none", "No live postings match this search", `Try a wider region or another level, or ask ${assistantName() || "the assistant"} to broaden the search.`, state.result.moreUrl || SITE);
+    else if (state.displayMode === "fullscreen" && state.fs) nodes = renderFullscreen();
+    else nodes = renderInline();
+
+    app.style.padding = state.displayMode === "fullscreen" && state.fs ? "0" : "";
+    app.replaceChildren(...nodes);
+  }
+
+  function changeDisplayMode(mode) {
+    if (mode === state.displayMode) return;
+    state.displayMode = mode;
+    if (mode === "fullscreen" && state.phase === "results" && !state.fs) startFullscreen();
+    if (mode !== "fullscreen") state.fs = null;
+    render();
   }
 
   function applyHostContext(ctx) {
     if (!ctx) return;
     const root = document.documentElement;
     if (ctx.theme === "light" || ctx.theme === "dark") root.style.colorScheme = ctx.theme;
-    const vars = (ctx.styles && ctx.styles.variables) || {};
-    for (const [name, value] of Object.entries(vars)) if (value) root.style.setProperty(name, value);
     const fonts = ctx.styles && ctx.styles.css && ctx.styles.css.fonts;
     if (fonts) document.head.appendChild(el("style", { text: fonts }));
+    const font = ctx.styles && ctx.styles.variables && ctx.styles.variables["--font-sans"];
+    if (font) root.style.setProperty("--font-sans", font);
+    const insets = ctx.safeAreaInsets;
+    if (insets && typeof insets.bottom === "number") root.style.setProperty("--safe-bottom", insets.bottom + "px");
+    if (Array.isArray(ctx.availableDisplayModes)) state.displayModes = ctx.availableDisplayModes;
+    if (ctx.displayMode) changeDisplayMode(ctx.displayMode);
+    render();
   }
 
   window.addEventListener("message", (event) => {
@@ -187,16 +667,22 @@
     }
 
     switch (message.method) {
-      case "ui/notifications/tool-result":
-        if (message.params && message.params.isError) {
-          app.textContent = "";
-          app.appendChild(el("div", { class: "empty", text: "The search did not run. Ask again with different filters." }));
+      case "ui/notifications/tool-result": {
+        const params = message.params || {};
+        if (params.isError || !params.structuredContent) {
+          state.phase = "error";
         } else {
-          render(message.params && message.params.structuredContent);
+          state.phase = "results";
+          state.result = params.structuredContent;
+          state.openId = null;
+          if (state.displayMode === "fullscreen") startFullscreen();
         }
+        render();
         break;
+      }
       case "ui/notifications/tool-cancelled":
-        app.textContent = "";
+        state.phase = "error";
+        render();
         break;
       case "ui/notifications/host-context-changed":
         applyHostContext(message.params);
@@ -207,22 +693,30 @@
     }
   });
 
+  window.addEventListener("resize", () => { if (state.fs) render(); });
+
+  render();
+
   (async () => {
     try {
       const init = await request("ui/initialize", {
         protocolVersion: "2026-01-26",
-        appInfo: { name: "aworkado-jobs", version: "1.0.0" },
-        appCapabilities: { availableDisplayModes: ["inline"] },
+        appInfo: { name: "aworkado-jobs", version: "2.0.0" },
+        appCapabilities: { availableDisplayModes: ["inline", "fullscreen"] },
       });
+      state.hostName = (init && init.hostInfo && init.hostInfo.name) || "";
       applyHostContext(init && init.hostContext);
     } catch {
-      // A host that refuses the handshake still gets the cards, with the fallback palette.
+      // A host that refuses the handshake still gets the list, inline only.
     }
     notify("ui/notifications/initialized", {});
-    const report = () => notify("ui/notifications/size-changed", {
-      width: document.documentElement.scrollWidth,
-      height: document.documentElement.scrollHeight,
-    });
+    const report = () => {
+      if (state.displayMode !== "inline") return;
+      notify("ui/notifications/size-changed", {
+        width: document.documentElement.scrollWidth,
+        height: document.documentElement.scrollHeight,
+      });
+    };
     new ResizeObserver(report).observe(document.body);
     report();
   })();

@@ -10,7 +10,7 @@ https://aworkado.co/mcp
 
 It speaks Streamable HTTP and needs no account or API key. It only reads data, and it's free.
 
-![Aworkado job cards in Claude](docs/claude-widget.png)
+![Aworkado job results in Claude](docs/claude-widget.png)
 
 ## Connect
 
@@ -50,11 +50,19 @@ Searches live remote and hybrid postings. All filters are optional; when you giv
 | `level` | `Entry`, `Mid-level` or `Senior` |
 | `postedWithin` | `day`, `week` or `month` |
 
-You get the ten newest matches, the total number of matches and a link to the full list on aworkado.co. Hosts that support [MCP Apps](https://modelcontextprotocol.io/docs/extensions/apps), like Claude, show the results as job cards. The widget's source is in [`widget/job-widget.html`](widget/job-widget.html).
+You get the ten newest matches, the total number of matches and a link to the full list on aworkado.co.
+
+Hosts that support [MCP Apps](https://modelcontextprotocol.io/docs/extensions/apps), like Claude, show the results as a table. Click a row to see the key points and the link, or ask the assistant about that role. The expand button opens a full-screen view where you can filter by workplace and level, sort by salary and load more postings. The widget's source is in [`widget/job-widget.html`](widget/job-widget.html).
+
+![Full-screen view in Claude](docs/claude-fullscreen.png)
 
 ### `get_job`
 
 Opens one posting from the search results by its `jobId`. It returns the description, a short summary, the salary if the employer lists one, the countries the job is open to, and the link.
+
+### `browse_jobs`
+
+The widget's own paged search for the full-screen view. Hosts hide it from the model (`_meta.ui.visibility: ["app"]`), so the assistant only sees the two tools above.
 
 ## Try asking
 

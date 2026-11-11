@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "co.aworkado/jobs",
+  "title": "Aworkado",
+  "description": "Live remote and hybrid jobs from employers' career pages. Free, read-only, no account.",
+  "websiteUrl": "https://aworkado.co/ai-assistants",
+  "repository": {
+    "url": "https://github.com/aworkado/aworkado-mcp",
+    "source": "github"
+  },
+  "version": "1.0.1",
+  "icons": [
+    {
+      "src": "https://aworkado.co/icon.svg",
+      "mimeType": "image/svg+xml"
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://aworkado.co/mcp"
+    }
+  ]
+}

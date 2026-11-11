@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aworkado jobs</title>
+<style>
+  /* Host variables first (MCP Apps hostContext.styles), the website's palette as fallback. */
+  :root {
+    color-scheme: light dark;
+    --aw-bg: var(--color-background-primary, light-dark(#ffffff, #0a0a0b));
+    --aw-card: var(--color-background-secondary, light-dark(#f7f7f8, #18181b));
+    --aw-text: var(--color-text-primary, light-dark(#09090b, #fafafa));
+    --aw-muted: var(--color-text-secondary, light-dark(#5f5f6b, #a1a1aa));
+    --aw-border: var(--color-border-primary, light-dark(#e4e4e7, #27272a));
+    --aw-accent: light-dark(#0080ff, #4da6ff);
+    --aw-radius: var(--border-radius-lg, 12px);
+    --aw-font: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: transparent; }
+  body { font: 14px/1.4 var(--aw-font); color: var(--aw-text); }
+  #app { padding: 4px 2px; max-width: 100%; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 2px 8px; }
+  .head h2 { font-size: 13px; font-weight: 600; margin: 0; color: var(--aw-muted); }
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .card {
+    display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; align-items: start;
+    padding: 12px; border: 1px solid var(--aw-border); border-radius: var(--aw-radius);
+    background: var(--aw-card); color: inherit; text-decoration: none; cursor: pointer;
+    transition: border-color .12s ease;
+  }
+  .card:hover, .card:focus-visible { border-color: var(--aw-accent); outline: none; }
+  .logo {
+    width: 40px; height: 40px; border-radius: 8px; background: var(--aw-bg);
+    border: 1px solid var(--aw-border); display: grid; place-items: center; overflow: hidden;
+    font-weight: 600; color: var(--aw-muted);
+  }
+  .logo img { width: 100%; height: 100%; object-fit: contain; }
+  .body { min-width: 0; }
+  .title { font-weight: 600; font-size: 15px; margin: 0 0 2px; overflow-wrap: anywhere; }
+  .company { color: var(--aw-muted); margin: 0 0 6px; }
+  .meta { display: flex; flex-wrap: wrap; gap: 4px 6px; }
+  .chip {
+    font-size: 12px; padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--aw-border); color: var(--aw-muted); white-space: nowrap;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+  }
+  .chip.pay { color: var(--aw-text); }
+  .foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
+  .more {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px;
+    border-radius: var(--aw-radius); background: var(--aw-accent); color: #fff;
+    font-weight: 600; text-decoration: none;
+  }
+  .brand { font-size: 12px; color: var(--aw-muted); }
+  .empty { padding: 16px; text-align: center; color: var(--aw-muted); }
+</style>
+</head>
+<body>
+<div id="app"><div class="empty">Searching jobs…</div></div>
+<script>
+(() => {
+  "use strict";
+
+  // MCP Apps bridge (spec 2026-01-26): JSON-RPC 2.0 over postMessage with the host.
+  let nextId = 1;
+  const pending = new Map();
+  const send = (message) => window.parent.postMessage({ jsonrpc: "2.0", ...message }, "*");
+  const request = (method, params) => new Promise((resolve, reject) => {
+    const id = nextId++;
+    pending.set(id, { resolve, reject });
+    send({ id, method, params });
+  });
+  const notify = (method, params) => send({ method, params });
+
+  const app = document.getElementById("app");
+
+  function el(tag, attrs, children) {
+    const node = document.createElement(tag);
+    for (const [key, value] of Object.entries(attrs || {})) {
+      if (value === undefined || value === null) continue;
+      if (key === "class") node.className = value;
+      else if (key === "text") node.textContent = value;
+      else node.setAttribute(key, value);
+    }
+    for (const child of children || []) if (child) node.appendChild(child);
+    return node;
+  }
+
+  // Links go through the host (ui/open-link) so they open in the user's browser; a host
+  // without it falls back to a new window.
+  async function openLink(url) {
+    try {
+      const result = await request("ui/open-link", { url });
+      if (result && result.isError) throw new Error("open-link refused");
+    } catch {
+      window.open(url, "_blank", "noopener");
+    }
+  }
+
+  function linkTo(node, url) {
+    node.setAttribute("href", url);
+    node.setAttribute("target", "_blank");
+    node.setAttribute("rel", "noopener");
+    node.addEventListener("click", (event) => { event.preventDefault(); openLink(url); });
+    return node;
+  }
+
+  function logo(job) {
+    const box = el("div", { class: "logo", text: job.logoUrl ? "" : (job.company || "?").charAt(0).toUpperCase() });
+    if (job.logoUrl) {
+      const img = el("img", { src: job.logoUrl, alt: "", loading: "lazy" });
+      img.addEventListener("error", () => { box.textContent = (job.company || "?").charAt(0).toUpperCase(); });
+      box.appendChild(img);
+    }
+    return box;
+  }
+
+  function ago(isoDate) {
+    const days = Math.floor((Date.now() - Date.parse(isoDate + "T00:00:00Z")) / 86400000);
+    if (!(days >= 0)) return null;
+    if (days === 0) return "Today";
+    if (days === 1) return "Yesterday";
+    if (days < 30) return days + " days ago";
+    return new Date(isoDate).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+
+  function card(job) {
+    const chips = [
+      job.salary && el("span", { class: "chip pay", text: job.salary }),
+      el("span", { class: "chip", text: job.location }),
+      ...(job.workplace || []).map((w) => el("span", { class: "chip", text: w })),
+      job.level && el("span", { class: "chip", text: job.level }),
+      ago(job.datePosted) && el("span", { class: "chip", text: ago(job.datePosted) }),
+    ];
+    return linkTo(el("a", { class: "card" }, [
+      logo(job),
+      el("div", { class: "body" }, [
+        el("p", { class: "title", text: job.title }),
+        el("p", { class: "company", text: job.company }),
+        el("div", { class: "meta" }, chips),
+      ]),
+    ]), job.url);
+  }
+
+  function render(result) {
+    app.textContent = "";
+    const jobs = (result && result.jobs) || [];
+    if (jobs.length === 0) {
+      app.appendChild(el("div", { class: "empty", text: "No live postings match this search." }));
+      return;
+    }
+    const total = result.totalCount || jobs.length;
+    app.appendChild(el("div", { class: "head" }, [
+      el("h2", { text: total > jobs.length ? `${jobs.length} newest of ${total} jobs` : `${total} jobs` }),
+    ]));
+    app.appendChild(el("div", { class: "list" }, jobs.map(card)));
+    app.appendChild(el("div", { class: "foot" }, [
+      el("span", { class: "brand", text: "Aworkado · remote jobs from company career pages" }),
+      result.moreUrl && linkTo(el("a", { class: "more", text: total > jobs.length ? "See all on Aworkado" : "Open Aworkado" }), result.moreUrl),
+    ]));
+  }
+
+  function applyHostContext(ctx) {
+    if (!ctx) return;
+    const root = document.documentElement;
+    if (ctx.theme === "light" || ctx.theme === "dark") root.style.colorScheme = ctx.theme;
+    const vars = (ctx.styles && ctx.styles.variables) || {};
+    for (const [name, value] of Object.entries(vars)) if (value) root.style.setProperty(name, value);
+    const fonts = ctx.styles && ctx.styles.css && ctx.styles.css.fonts;
+    if (fonts) document.head.appendChild(el("style", { text: fonts }));
+  }
+
+  window.addEventListener("message", (event) => {
+    if (event.source !== window.parent) return;
+    const message = event.data;
+    if (!message || message.jsonrpc !== "2.0") return;
+
+    if (message.id !== undefined && !message.method) {
+      const waiter = pending.get(message.id);
+      if (waiter) {
+        pending.delete(message.id);
+        message.error ? waiter.reject(message.error) : waiter.resolve(message.result);
+      }
+      return;
+    }
+
+    switch (message.method) {
+      case "ui/notifications/tool-result":
+        if (message.params && message.params.isError) {
+          app.textContent = "";
+          app.appendChild(el("div", { class: "empty", text: "The search did not run. Ask again with different filters." }));
+        } else {
+          render(message.params && message.params.structuredContent);
+        }
+        break;
+      case "ui/notifications/tool-cancelled":
+        app.textContent = "";
+        break;
+      case "ui/notifications/host-context-changed":
+        applyHostContext(message.params);
+        break;
+      case "ui/resource-teardown":
+        send({ id: message.id, result: {} });
+        break;
+    }
+  });
+
+  (async () => {
+    try {
+      const init = await request("ui/initialize", {
+        protocolVersion: "2026-01-26",
+        appInfo: { name: "aworkado-jobs", version: "1.0.0" },
+        appCapabilities: { availableDisplayModes: ["inline"] },
+      });
+      applyHostContext(init && init.hostContext);
+    } catch {
+      // A host that refuses the handshake still gets the cards, with the fallback palette.
+    }
+    notify("ui/notifications/initialized", {});
+    const report = () => notify("ui/notifications/size-changed", {
+      width: document.documentElement.scrollWidth,
+      height: document.documentElement.scrollHeight,
+    });
+    new ResizeObserver(report).observe(document.body);
+    report();
+  })();
+})();
+</script>
+</body>
+</html>
